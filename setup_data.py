@@ -29,7 +29,7 @@ def setup_initial_data():
     data = fetcher.get_processed_data(start_year=1995)
     
     if not data:
-        print("\n✗ ERROR: Failed to fetch data")
+        print("\n[ERROR] Failed to fetch data")
         print("\nTroubleshooting:")
         print("  1. Check internet connection")
         print("  2. Get FREE FRED API key from: https://fred.stlouisfed.org/")
@@ -37,7 +37,7 @@ def setup_initial_data():
         print("  4. Or add historical CSV file: 'argentina_cpi_historical.csv'")
         sys.exit(1)
     
-    print(f"\n   ✓ Successfully fetched {len(data)} months of data")
+    print(f"\n   [OK] Successfully fetched {len(data)} months of data")
     print(f"   Date range: {data[0]['date']} to {data[-1]['date']}")
     
     # Save to database
@@ -45,16 +45,16 @@ def setup_initial_data():
     success = save_inflation_data(data)
     
     if not success:
-        print("\n✗ ERROR: Failed to save data to database")
+        print("\n[ERROR] Failed to save data to database")
         sys.exit(1)
     
     # Show summary
     print("\n" + "=" * 60)
     print("Setup Complete!")
     print("=" * 60)
-    print(f"\n✓ {len(data)} months of inflation data saved")
-    print(f"✓ Coverage: {data[0]['date']} to {data[-1]['date']}")
-    print(f"✓ Total years: {len(data) // 12} years")
+    print(f"\n[OK] {len(data)} months of inflation data saved")
+    print(f"[OK] Coverage: {data[0]['date']} to {data[-1]['date']}")
+    print(f"[OK] Total years: {len(data) // 12} years")
     
     # Show recent data
     print("\nRecent data (last 5 months):")
@@ -66,9 +66,9 @@ def setup_initial_data():
               f"CPI: {record['cpi_index']:>10.2f}")
     print("-" * 60)
     
-    print("\n✓ API ready to start!")
-    print("✓ Run: python main.py")
-    print("✓ Visit: http://localhost:8001")
+    print("\n[OK] API ready to start!")
+    print("[OK] Run: python main.py")
+    print("[OK] Visit: http://localhost:8001")
     print()
 
 if __name__ == "__main__":
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         print("\n\nSetup interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[ERROR] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

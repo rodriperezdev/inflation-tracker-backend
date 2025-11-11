@@ -54,12 +54,12 @@ def interpolate_2017_months():
         ).first()
         
         if not dec_2016 or not dec_2017:
-            print("✗ Error: Need December 2016 and December 2017 data to interpolate")
+            print("[ERROR] Error: Need December 2016 and December 2017 data to interpolate")
             print("   Make sure both months exist in the database")
             return []
         
-        print(f"✓ Found December 2016: CPI = {dec_2016.cpi_index:.2f}")
-        print(f"✓ Found December 2017: CPI = {dec_2017.cpi_index:.2f}")
+        print(f"[OK] Found December 2016: CPI = {dec_2016.cpi_index:.2f}")
+        print(f"[OK] Found December 2017: CPI = {dec_2017.cpi_index:.2f}")
         
         # Calculate total growth over 12 months
         total_growth = (dec_2017.cpi_index / dec_2016.cpi_index)
@@ -124,7 +124,7 @@ def main():
         missing_months = [m for m in all_months if m not in existing_months]
         
         if not missing_months:
-            print("✓ All 2017 months are already in the database!")
+            print("[OK] All 2017 months are already in the database!")
             return
         
         print(f"Missing months: {missing_months}")
@@ -147,10 +147,10 @@ def main():
         records = interpolate_2017_months()
         
         if not records:
-            print("\n✗ Could not interpolate. Missing required data.")
+            print("\n[ERROR] Could not interpolate. Missing required data.")
             return
         
-        print(f"\n✓ Generated {len(records)} months of interpolated data")
+        print(f"\n[OK] Generated {len(records)} months of interpolated data")
         print("\nAdding to database...")
         print("-" * 70)
         
@@ -165,7 +165,7 @@ def main():
             ):
                 success_count += 1
         
-        print(f"\n✓ Successfully added {success_count} months")
+        print(f"\n[OK] Successfully added {success_count} months")
         
     elif choice == '2':
         print("\nUsing estimated 2017 data...")
@@ -184,7 +184,7 @@ def main():
             ):
                 success_count += 1
         
-        print(f"\n✓ Successfully added {success_count} months")
+        print(f"\n[OK] Successfully added {success_count} months")
         print("\nNote: These are estimates. Replace with official data if available.")
         
     elif choice == '3':
@@ -194,11 +194,11 @@ def main():
         return
     
     else:
-        print("\n✗ Invalid choice")
+        print("\n[ERROR] Invalid choice")
         return
     
     print("\n" + "=" * 70)
-    print("✓ Gap filled!")
+    print("[OK] Gap filled!")
     print("=" * 70)
     print("\nNext steps:")
     print("1. Verify: python verify_data.py")
@@ -213,7 +213,7 @@ if __name__ == "__main__":
         print("\n\nCancelled by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[ERROR] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

@@ -41,7 +41,7 @@ def get_db():
 def init_db():
     """Create all tables"""
     Base.metadata.create_all(bind=engine)
-    print("✓ Database initialized successfully!")
+    print("[OK] Database initialized successfully!")
 
 
 def save_inflation_data(records: list):
@@ -74,12 +74,12 @@ def save_inflation_data(records: list):
                 db.add(inflation_record)
         
         db.commit()
-        print(f"✓ Saved/updated {len(records)} inflation records")
+        print(f"[OK] Saved/updated {len(records)} inflation records")
         return True
     
     except Exception as e:
         db.rollback()
-        print(f"✗ Error saving data: {e}")
+        print(f"[ERROR] Error saving data: {e}")
         return False
     
     finally:
@@ -113,7 +113,7 @@ def get_cpi_for_date(target_date: datetime.date):
         ).first()
         
         if latest_record and target_date > latest_record.date:
-            print(f"⚠️ Requested date {target_date} is after latest available date {latest_record.date}. Using latest CPI.")
+            print(f"[WARNING] Requested date {target_date} is after latest available date {latest_record.date}. Using latest CPI.")
             return latest_record.cpi_index
         
         # If date is before first record, use first available CPI
@@ -122,7 +122,7 @@ def get_cpi_for_date(target_date: datetime.date):
         ).first()
         
         if earliest_record and target_date < earliest_record.date:
-            print(f"⚠️ Requested date {target_date} is before earliest available date {earliest_record.date}. Using earliest CPI.")
+            print(f"[WARNING] Requested date {target_date} is before earliest available date {earliest_record.date}. Using earliest CPI.")
             return earliest_record.cpi_index
         
         return None

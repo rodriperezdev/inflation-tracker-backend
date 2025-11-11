@@ -26,12 +26,12 @@ def verify_data():
         print("=" * 70)
         print("Database Verification")
         print("=" * 70)
-        print(f"\n✓ Total records: {total}")
-        print(f"✓ Date range: {first.date} to {latest.date}")
-        print(f"✓ Total years: {latest.year - first.year + 1}")
+        print(f"\n[OK] Total records: {total}")
+        print(f"[OK] Date range: {first.date} to {latest.date}")
+        print(f"[OK] Total years: {latest.year - first.year + 1}")
         
         if data_2025:
-            print(f"\n✓ 2025 data: {len(data_2025)} months")
+            print(f"\n[OK] 2025 data: {len(data_2025)} months")
             print("\n2025 months in database:")
             print("-" * 70)
             for record in data_2025:
@@ -39,7 +39,7 @@ def verify_data():
                       f"Annual={record.annual_rate:.2f}%, CPI={record.cpi_index:.2f}")
             print("-" * 70)
         else:
-            print("\n⚠️  No 2025 data found")
+            print("\n[WARNING] No 2025 data found")
         
         # Check for gaps
         print("\nChecking for data gaps...")
@@ -58,14 +58,14 @@ def verify_data():
                 gaps.append((current, expected_next, next_date))
         
         if gaps:
-            print(f"⚠️  Found {len(gaps)} gap(s):")
+            print(f"[WARNING] Found {len(gaps)} gap(s):")
             for gap_start, expected, actual in gaps[:5]:  # Show first 5
                 print(f"  Gap after {gap_start}: Expected {expected}, got {actual}")
         else:
-            print("✓ No gaps found - data is continuous")
+            print("[OK] No gaps found - data is continuous")
         
         print("\n" + "=" * 70)
-        print("✓ Database is ready!")
+        print("[OK] Database is ready!")
         print("=" * 70)
         
     finally:
@@ -73,6 +73,9 @@ def verify_data():
 
 if __name__ == "__main__":
     verify_data()
+
+
+
 
 
 

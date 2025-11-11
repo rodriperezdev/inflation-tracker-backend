@@ -258,18 +258,18 @@ def add_corrected_data():
         )
         
         if result:
-            print(f"   ✓ CPI: {cpi_index:.4f}")
+            print(f"   [OK] CPI: {cpi_index:.4f}")
             success_count += 1
         else:
             error_count += 1
-            print(f"   ✗ Failed to add data")
+            print(f"   [ERROR] Failed to add data")
     
     print("\n" + "=" * 70)
     print("Summary")
     print("=" * 70)
-    print(f"✓ Successfully added/updated: {success_count}")
+    print(f"[OK] Successfully added/updated: {success_count}")
     if error_count > 0:
-        print(f"✗ Failed: {error_count}")
+        print(f"[ERROR] Failed: {error_count}")
     print()
     print("Next steps:")
     print("1. Verify data: python verify_data.py")
@@ -284,7 +284,7 @@ if __name__ == "__main__":
         print("\n\nCancelled by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[ERROR] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

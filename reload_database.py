@@ -13,13 +13,13 @@ from pathlib import Path
 
 def check_backend_running():
     """Check if backend server might be running"""
-    print("⚠️  Make sure the backend server is STOPPED before proceeding!")
+    print("[WARNING] Make sure the backend server is STOPPED before proceeding!")
     print("   If it's running, press Ctrl+C to stop it now.")
     print()
     
     response = input("Is the backend server stopped? (yes/no): ").strip().lower()
     if response not in ['yes', 'y']:
-        print("\n✗ Please stop the backend server first!")
+        print("\n[ERROR] Please stop the backend server first!")
         print("   Then run this script again.")
         sys.exit(1)
 
@@ -30,14 +30,14 @@ def delete_database():
     if db_file.exists():
         try:
             db_file.unlink()
-            print("✓ Deleted old database: inflation.db")
+            print("[OK] Deleted old database: inflation.db")
             return True
         except Exception as e:
-            print(f"✗ Error deleting database: {e}")
+            print(f"[ERROR] Error deleting database: {e}")
             print("   Make sure the backend server is stopped!")
             return False
     else:
-        print("ℹ️  No existing database found (this is OK for first-time setup)")
+        print("[INFO] No existing database found (this is OK for first-time setup)")
         return True
 
 def verify_csv():
@@ -45,12 +45,12 @@ def verify_csv():
     csv_file = Path('argentina_cpi_historical.csv')
     
     if not csv_file.exists():
-        print(f"\n✗ CSV file not found: {csv_file}")
+        print(f"\n[ERROR] CSV file not found: {csv_file}")
         print("   Make sure 'argentina_cpi_historical.csv' is in the current directory")
         print("   Run 'python fetch_historical_data.py' first to create it")
         return False
     
-    print(f"✓ Found CSV file: {csv_file}")
+    print(f"[OK] Found CSV file: {csv_file}")
     
     # Quick check of file format
     try:
@@ -58,18 +58,18 @@ def verify_csv():
         df = pd.read_csv(csv_file, nrows=5)
         
         if 'date' not in df.columns or 'cpi' not in df.columns:
-            print(f"\n✗ CSV file has wrong format!")
+            print(f"\n[ERROR] CSV file has wrong format!")
             print(f"   Expected columns: date, cpi")
             print(f"   Found columns: {list(df.columns)}")
             return False
         
-        print(f"✓ CSV format looks correct")
+        print(f"[OK] CSV format looks correct")
         print(f"   Columns: {list(df.columns)}")
         print(f"   Sample dates: {df['date'].head().tolist()}")
         return True
         
     except Exception as e:
-        print(f"\n⚠️  Could not verify CSV format: {e}")
+        print(f"\n[WARNING] Could not verify CSV format: {e}")
         print("   Proceeding anyway...")
         return True
 
@@ -107,7 +107,7 @@ def main():
         setup_initial_data()
         
         print("\n" + "=" * 70)
-        print("✓ Database reload complete!")
+        print("[OK] Database reload complete!")
         print("=" * 70)
         print("\nNext steps:")
         print("  1. Start the backend: python main.py")
@@ -116,7 +116,7 @@ def main():
         print()
         
     except Exception as e:
-        print(f"\n✗ Error during setup: {e}")
+        print(f"\n[ERROR] Error during setup: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
@@ -125,13 +125,16 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n✗ Reload interrupted by user")
+        print("\n\n[ERROR] Reload interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[ERROR] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
+
+
+
 
 
 

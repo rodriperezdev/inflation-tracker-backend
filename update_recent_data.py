@@ -61,13 +61,13 @@ def save_new_records(records):
         
         db.commit()
         
-        print(f"✓ Added {new_count} new records")
-        print(f"✓ Updated {updated_count} existing records")
+        print(f"[OK] Added {new_count} new records")
+        print(f"[OK] Updated {updated_count} existing records")
         return True
     
     except Exception as e:
         db.rollback()
-        print(f"✗ Error saving data: {e}")
+        print(f"[ERROR] Error saving data: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -93,13 +93,13 @@ def main():
         months_diff = (current_date.year - latest_date.year) * 12 + (current_date.month - latest_date.month)
         
         if months_diff <= 0:
-            print("\n✓ Database is up to date!")
+            print("\n[OK] Database is up to date!")
             print("   No new data needed.")
             return
         
-        print(f"\n📅 Missing approximately {months_diff} month(s) of data")
+        print(f"\nMissing approximately {months_diff} month(s) of data")
     else:
-        print("⚠️  No data found in database")
+        print("[WARNING] No data found in database")
         print("   Run setup_data.py first to initialize the database")
         sys.exit(1)
     
@@ -114,14 +114,14 @@ def main():
     data = fetcher.get_processed_data(start_year=start_year)
     
     if not data:
-        print("\n✗ ERROR: Failed to fetch data from FRED")
+        print("\n[ERROR] Failed to fetch data from FRED")
         print("\nTroubleshooting:")
         print("  1. Check internet connection")
         print("  2. Verify FRED_API_KEY in .env file")
         print("  3. FRED API might have rate limits")
         sys.exit(1)
     
-    print(f"\n✓ Fetched {len(data)} months of data")
+    print(f"\n[OK] Fetched {len(data)} months of data")
     
     # Filter to only include records after the latest date
     # Convert latest_date to YYYY-MM-DD format for comparison
@@ -140,7 +140,7 @@ def main():
     print(f"   Records after {latest_date_str}: {len(new_records)}")
     
     if not new_records:
-        print("\n✓ No new records found")
+        print("\n[OK] No new records found")
         print("   Database is already up to date!")
         return
     
@@ -158,14 +158,14 @@ def main():
     success = save_new_records(new_records)
     
     if not success:
-        print("\n✗ ERROR: Failed to save data")
+        print("\n[ERROR] Failed to save data")
         sys.exit(1)
     
     print("\n" + "=" * 70)
-    print("✓ Update Complete!")
+    print("[OK] Update Complete!")
     print("=" * 70)
-    print(f"\n✓ Added {len(new_records)} new month(s) of data")
-    print(f"✓ Latest date now: {new_records[-1]['date']}")
+    print(f"\n[OK] Added {len(new_records)} new month(s) of data")
+    print(f"[OK] Latest date now: {new_records[-1]['date']}")
     print("\nNext steps:")
     print("  1. Restart backend server (if running)")
     print("  2. Refresh frontend to see new data")
@@ -176,10 +176,10 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n✗ Update interrupted by user")
+        print("\n\n[ERROR] Update interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[ERROR] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

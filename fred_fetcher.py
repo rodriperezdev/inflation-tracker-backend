@@ -39,11 +39,11 @@ class InflationDataFetcher:
                     raise ValueError(f"CSV must have 'date' and either 'cpi' or 'cpi_index' column. Found: {list(df.columns)}")
                 
                 df['date'] = pd.to_datetime(df['date'])
-                print(f"✓ Loaded historical data from {filepath}")
+                print(f"[OK] Loaded historical data from {filepath}")
                 print(f"   Records: {len(df)}, Date range: {df['date'].min()} to {df['date'].max()}")
                 return df
             else:
-                print(f"⚠️  Historical CSV file not found: {filepath}")
+                print(f"[WARNING] Historical CSV file not found: {filepath}")
                 print("   Creating sample data for demonstration...")
                 return self.create_sample_data()
         except Exception as e:
@@ -69,7 +69,7 @@ class InflationDataFetcher:
             'cpi': cpi_values
         })
         
-        print("ℹ️  Using simulated data for 1995-2016")
+        print("[INFO] Using simulated data for 1995-2016")
         print("   To use real data, add 'argentina_cpi_historical.csv' file")
         return df
     
@@ -90,7 +90,7 @@ class InflationDataFetcher:
             )
             
             if len(data) == 0:
-                print("⚠️  No recent data from FRED")
+                print("[WARNING] No recent data from FRED")
                 return pd.DataFrame()
             
             df = pd.DataFrame({
@@ -111,7 +111,7 @@ class InflationDataFetcher:
                 monthly_multiplier = (1 + annual_rate) ** (1/12)
                 df.loc[i, 'cpi'] = df.loc[i-1, 'cpi'] * monthly_multiplier
             
-            print(f"✓ Fetched {len(df)} months from FRED")
+            print(f"[OK] Fetched {len(df)} months from FRED")
             return df[['date', 'cpi']]
         
         except Exception as e:
@@ -130,7 +130,7 @@ class InflationDataFetcher:
         recent = self.fetch_recent_fred_data('2017-01-01')
         
         if historical.empty and recent.empty:
-            print("✗ No data available from any source")
+            print("[ERROR] No data available from any source")
             return pd.DataFrame()
         
         # Combine datasets
@@ -218,9 +218,9 @@ if __name__ == "__main__":
     data = fetcher.get_processed_data(start_year=1995)
     
     if data:
-        print(f"\n✓ Successfully processed {len(data)} months of data")
-        print(f"✓ Date range: {data[0]['date']} to {data[-1]['date']}")
-        print(f"✓ Total years: {len(data) // 12}")
+        print(f"\n[OK] Successfully processed {len(data)} months of data")
+        print(f"[OK] Date range: {data[0]['date']} to {data[-1]['date']}")
+        print(f"[OK] Total years: {len(data) // 12}")
         
         print("\nSample data (last 5 months):")
         print("-" * 80)
@@ -230,9 +230,9 @@ if __name__ == "__main__":
             print(f"{record['date']:<12} {record['cpi_index']:<12.2f} "
                   f"{record['monthly_rate']:<12.2f} {record['annual_rate']:<12.2f}")
         print("-" * 80)
-        print("\n✓ Data ready to use!")
-        print("✓ Run 'python setup_data.py' to load into database")
+        print("\n[OK] Data ready to use!")
+        print("[OK] Run 'python setup_data.py' to load into database")
     else:
-        print("\n✗ No data fetched")
+        print("\n[ERROR] No data fetched")
     
     print("\n" + "=" * 60)

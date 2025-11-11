@@ -51,10 +51,10 @@ def fetch_world_bank_data():
             if records:
                 df = pd.DataFrame(records)
                 df = df.sort_values('year')
-                print(f"✓ Fetched {len(df)} years of data from World Bank")
+                print(f"[OK] Fetched {len(df)} years of data from World Bank")
                 return df
         
-        print("✗ No valid data in response")
+        print("[ERROR] No valid data in response")
         return pd.DataFrame()
     
     except requests.exceptions.RequestException as e:
@@ -105,7 +105,7 @@ def fetch_fred_alternative():
     
     df = pd.DataFrame(records)
     df = df.sort_values('year').reset_index(drop=True)
-    print(f"✓ Created {len(df)} years of realistic data")
+    print(f"[OK] Created {len(df)} years of realistic data")
     return df
 
 
@@ -117,11 +117,11 @@ def annual_to_monthly(annual_df):
     
     # Ensure DataFrame is not empty and has required columns
     if annual_df.empty:
-        print("✗ Error: Annual data is empty")
+        print("[ERROR] Annual data is empty")
         return pd.DataFrame()
     
     if 'year' not in annual_df.columns or 'cpi' not in annual_df.columns:
-        print("✗ Error: Annual data missing required columns (year, cpi)")
+        print("[ERROR] Annual data missing required columns (year, cpi)")
         return pd.DataFrame()
     
     # Sort by year to ensure proper ordering
@@ -162,16 +162,16 @@ def annual_to_monthly(annual_df):
         })
     
     df = pd.DataFrame(monthly_records)
-    print(f"✓ Created {len(df)} months of data")
+    print(f"[OK] Created {len(df)} months of data")
     return df
 
 
 def save_to_csv(df, filename='argentina_cpi_historical.csv'):
     """Save data to CSV file"""
     df.to_csv(filename, index=False)
-    print(f"\n✓ Saved to {filename}")
-    print(f"✓ Date range: {df.iloc[0]['date']} to {df.iloc[-1]['date']}")
-    print(f"✓ Total records: {len(df)}")
+    print(f"\n[OK] Saved to {filename}")
+    print(f"[OK] Date range: {df.iloc[0]['date']} to {df.iloc[-1]['date']}")
+    print(f"[OK] Total records: {len(df)}")
 
 
 def main():
@@ -185,7 +185,7 @@ def main():
     
     # If World Bank data is empty or insufficient, use fallback
     if annual_data.empty or len(annual_data) < 5:
-        print("\n✗ Using fallback interpolated data")
+        print("\n[WARNING] Using fallback interpolated data")
         print("  (Based on known inflation milestones)")
         annual_data = fetch_fred_alternative()
     else:
@@ -197,7 +197,7 @@ def main():
         
         # If filtering left us with insufficient data, use fallback
         if annual_data.empty or len(annual_data) < 5:
-            print("\n⚠️  Insufficient data after filtering, using realistic estimates")
+            print("\n[WARNING] Insufficient data after filtering, using realistic estimates")
             annual_data = fetch_fred_alternative()
     
     # Convert to monthly
@@ -218,7 +218,7 @@ def main():
         print(f"{row['date']}: CPI = {row['cpi']:.2f}")
     print("-" * 40)
     
-    print("\n✓ Done!")
+    print("\n[OK] Done!")
     print("\nNext steps:")
     print("1. Delete old database: del inflation.db")
     print("2. Reload data: python setup_data.py")
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(f"\n✗ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         import traceback
         traceback.print_exc()
 

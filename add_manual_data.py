@@ -100,11 +100,11 @@ def add_monthly_data(year, month, monthly_rate, annual_rate=None, cpi_index=None
             calculated_annual = get_annual_rate_from_database(year, month)
             if calculated_annual is not None:
                 annual_rate = calculated_annual
-                print(f"   ✓ Calculated annual rate from database: {annual_rate:.2f}%")
+                print(f"   [OK] Calculated annual rate from database: {annual_rate:.2f}%")
             else:
                 # Estimate from monthly rate (rough approximation)
                 annual_rate = estimate_annual_rate_from_monthly(monthly_rate)
-                print(f"   ⚠️  Could not calculate from database. Estimated: {annual_rate:.2f}%")
+                print(f"   [WARNING] Could not calculate from database. Estimated: {annual_rate:.2f}%")
                 print(f"      (Note: This is approximate. Actual annual rate compares to 12 months ago)")
         
         # Check if record already exists
@@ -113,7 +113,7 @@ def add_monthly_data(year, month, monthly_rate, annual_rate=None, cpi_index=None
         ).first()
         
         if existing:
-            print(f"⚠️  Record for {record_date} already exists. Updating...")
+            print(f"[WARNING] Record for {record_date} already exists. Updating...")
             existing.monthly_rate = monthly_rate
             existing.annual_rate = annual_rate
             
@@ -135,7 +135,7 @@ def add_monthly_data(year, month, monthly_rate, annual_rate=None, cpi_index=None
                     existing.cpi_index = calculate_cpi_from_monthly_rate(prev_cpi, monthly_rate)
                     print(f"   Calculated CPI from previous month: {existing.cpi_index:.2f}")
                 else:
-                    print(f"⚠️  Could not find previous month's CPI. Using latest CPI.")
+                    print(f"[WARNING] Could not find previous month's CPI. Using latest CPI.")
                     latest_cpi, latest_date = get_latest_cpi()
                     if latest_cpi:
                         # Estimate months between latest and current
@@ -146,7 +146,7 @@ def add_monthly_data(year, month, monthly_rate, annual_rate=None, cpi_index=None
                             existing.cpi_index = calculate_cpi_from_monthly_rate(latest_cpi, monthly_rate)
                         print(f"   Estimated CPI from latest data: {existing.cpi_index:.2f}")
                     else:
-                        print(f"✗ Error: Could not calculate CPI. Please provide cpi_index manually.")
+                        print(f"[ERROR] Could not calculate CPI. Please provide cpi_index manually.")
                         return False
             
             existing.updated_at = datetime.now(timezone.utc)
@@ -166,7 +166,7 @@ def add_monthly_data(year, month, monthly_rate, annual_rate=None, cpi_index=None
                     cpi_index = calculate_cpi_from_monthly_rate(prev_cpi, monthly_rate)
                     print(f"   Calculated CPI from previous month: {cpi_index:.2f}")
                 else:
-                    print(f"⚠️  Could not find previous month's CPI. Using latest CPI.")
+                    print(f"[WARNING] Could not find previous month's CPI. Using latest CPI.")
                     latest_cpi, latest_date = get_latest_cpi()
                     if latest_cpi:
                         # Estimate months between latest and new date
@@ -174,7 +174,7 @@ def add_monthly_data(year, month, monthly_rate, annual_rate=None, cpi_index=None
                         cpi_index = latest_cpi * ((1 + monthly_rate / 100) ** months_diff)
                         print(f"   Estimated CPI from latest data: {cpi_index:.2f}")
                     else:
-                        print(f"✗ Error: Could not calculate CPI. Please provide cpi_index manually.")
+                        print(f"[ERROR] Could not calculate CPI. Please provide cpi_index manually.")
                         return False
             
             # Create new record
@@ -196,12 +196,12 @@ def add_monthly_data(year, month, monthly_rate, annual_rate=None, cpi_index=None
             # Should not happen, but handle gracefully
             final_cpi = 0.0
         
-        print(f"✓ Added/updated {record_date}: Monthly={monthly_rate}%, Annual={annual_rate:.2f}%, CPI={final_cpi:.2f}")
+        print(f"[OK] Added/updated {record_date}: Monthly={monthly_rate}%, Annual={annual_rate:.2f}%, CPI={final_cpi:.2f}")
         return True
         
     except Exception as e:
         db.rollback()
-        print(f"✗ Error adding data: {e}")
+        print(f"[ERROR] Error adding data: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -246,9 +246,9 @@ def add_multiple_months(data_list):
     print("\n" + "=" * 70)
     print("Summary")
     print("=" * 70)
-    print(f"✓ Successfully added: {success_count}")
+    print(f"[OK] Successfully added: {success_count}")
     if fail_count > 0:
-        print(f"✗ Failed: {fail_count}")
+        print(f"[ERROR] Failed: {fail_count}")
     print()
 
 def interactive_add():
@@ -276,7 +276,7 @@ def interactive_add():
             month = int(month_input)
             
             if month < 1 or month > 12:
-                print("  ✗ Invalid month. Must be 1-12.")
+                print("  [ERROR] Invalid month. Must be 1-12.")
                 continue
             
             monthly_input = input("  Monthly rate % (e.g., 5.2): ").strip()
@@ -301,14 +301,14 @@ def interactive_add():
             month_num += 1
             
         except ValueError as e:
-            print(f"  ✗ Invalid input: {e}")
+            print(f"  [ERROR] Invalid input: {e}")
             continue
         except KeyboardInterrupt:
             print("\n\nCancelled by user")
             return
     
     if months:
-        print(f"\n✓ Adding {len(months)} month(s) of data...")
+        print(f"\n[OK] Adding {len(months)} month(s) of data...")
         add_multiple_months(months)
     else:
         print("\nNo data entered.")
@@ -350,7 +350,7 @@ if __name__ == "__main__":
         print("\n\nCancelled by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[ERROR] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
