@@ -9,7 +9,10 @@ from database import (
     InflationRecord, 
     calculate_price_conversion,
     get_inflation_summary,
-    get_cpi_for_date
+    get_cpi_for_date,
+    init_db,
+    SessionLocal,
+    save_inflation_data
 )
 from sqlalchemy.orm import Session
 
@@ -18,6 +21,37 @@ app = FastAPI(
     description="Track Argentine inflation rates and convert prices across time periods",
     version="1.0.0"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    try:
+        print("Initializing database...")
+        init_db()  # Create tables
+        
+        print("Checking if data exists...")
+        from database import SessionLocal, InflationRecord
+        db = SessionLocal()
+        count = db.query(InflationRecord).count()
+        db.close()
+        
+        if count == 0:
+            print("No data found, populating database...")
+            from fred_fetcher import InflationDataFetcher
+            from database import save_inflation_data
+            
+            fetcher = InflationDataFetcher()
+            data = fetcher.get_processed_data(start_year=1995)
+            
+            if data:
+                save_inflation_data(data)
+                print(f"Populated {len(data)} records!")
+            else:
+                print("Could not fetch data - using empty database")
+        else:
+            print(f"Database already has {count} records")
+            
+    except Exception as e:
+        print(f"Startup error: {e}")
 
 # CORS middleware
 app.add_middleware(
