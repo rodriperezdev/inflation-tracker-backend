@@ -25,33 +25,171 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event():
     try:
-        print("Initializing database...")
-        init_db()  # Create tables
+        print("[INFO] Initializing database...")
+        init_db()
         
-        print("Checking if data exists...")
-        from database import SessionLocal, InflationRecord
+        print("[INFO] Checking if data exists...")
         db = SessionLocal()
         count = db.query(InflationRecord).count()
-        db.close()
         
+        # Initial population if database is empty
         if count == 0:
-            print("No data found, populating database...")
+            print("[INFO] No data found, populating database...")
             from fred_fetcher import InflationDataFetcher
-            from database import save_inflation_data
             
             fetcher = InflationDataFetcher()
             data = fetcher.get_processed_data(start_year=1995)
             
             if data:
                 save_inflation_data(data)
-                print(f"Populated {len(data)} records!")
+                print(f"[OK] Populated {len(data)} records!")
             else:
-                print("Could not fetch data - using empty database")
+                print("[WARNING] Could not fetch data")
+                db.close()
+                return
         else:
-            print(f"Database already has {count} records")
+            print(f"[OK] Database has {count} records")
+        
+        # UPDATE RECENT DATA - Same logic as update_recent_data.py
+        print("\n[INFO] Checking for missing recent months...")
+        latest = db.query(InflationRecord).order_by(InflationRecord.date.desc()).first()
+        
+        if not latest:
+            print("[WARNING] No data in database")
+            db.close()
+            return
+        
+        latest_date = latest.date
+        current_date = date.today()
+        months_diff = (current_date.year - latest_date.year) * 12 + (current_date.month - latest_date.month)
+        
+        print(f"   Latest date in DB: {latest_date}")
+        print(f"   Current date: {current_date}")
+        print(f"   Months behind: {months_diff}")
+        
+        if months_diff > 0:
+            print(f"\n[INFO] Fetching {months_diff} missing month(s) from FRED...")
+            
+            # Fetch recent data from FRED (2017 onwards to ensure we get everything)
+            from fred_fetcher import InflationDataFetcher
+            fetcher = InflationDataFetcher()
+            start_year = latest_date.year if latest_date.year >= 2017 else 2017
+            all_data = fetcher.get_processed_data(start_year=start_year)
+            
+            if all_data:
+                # Filter to only new records
+                latest_str = latest_date.strftime('%Y-%m-%d')
+                new_records = [r for r in all_data if r['date'] > latest_str]
+                
+                if new_records:
+                    print(f"   Found {len(new_records)} new month(s) from FRED")
+                    
+                    # Save new records
+                    for record in new_records:
+                        record_date = datetime.strptime(record['date'], '%Y-%m-%d').date()
+                        
+                        # Check if already exists
+                        existing = db.query(InflationRecord).filter(
+                            InflationRecord.date == record_date
+                        ).first()
+                        
+                        if not existing:
+                            new_record = InflationRecord(
+                                date=record_date,
+                                year=record['year'],
+                                month=record['month'],
+                                cpi_index=record['cpi_index'],
+                                monthly_rate=record['monthly_rate'],
+                                annual_rate=record['annual_rate']
+                            )
+                            db.add(new_record)
+                    
+                    db.commit()
+                    print(f"   [OK] Added {len(new_records)} month(s) from FRED!")
+                    
+                    # Update latest_date after FRED update
+                    latest = db.query(InflationRecord).order_by(InflationRecord.date.desc()).first()
+                    latest_date = latest.date
+                    months_diff = (current_date.year - latest_date.year) * 12 + (current_date.month - latest_date.month)
+                    print(f"   New latest date: {latest_date}")
+                else:
+                    print("   No new data from FRED")
+            else:
+                print("   [WARNING] Could not fetch from FRED")
+        
+        # ADD HARDCODED DATA FOR VERY RECENT MONTHS (FRED doesn't have yet)
+        if months_diff > 0:
+            print(f"\n[INFO] FRED data not available for last {months_diff} month(s)")
+            print("   Adding hardcoded recent data...")
+            
+            # Hardcoded most recent months (update these with real data!)
+            # Get these values from: https://www.indec.gob.ar/ or https://tradingeconomics.com/argentina/inflation-cpi
+            very_recent_data = [
+                {'year': 2025, 'month': 1, 'monthly_rate': 2.2, 'annual_rate': 84.5},
+                {'year': 2025, 'month': 2, 'monthly_rate': 2.4, 'annual_rate': 66.9},
+                {'year': 2025, 'month': 3, 'monthly_rate': 3.7, 'annual_rate': 55.9},
+                {'year': 2025, 'month': 4, 'monthly_rate': 2.8, 'annual_rate': 47.3},
+                {'year': 2025, 'month': 5, 'monthly_rate': 1.5, 'annual_rate': 43.5},
+                {'year': 2025, 'month': 6, 'monthly_rate': 1.6, 'annual_rate': 39.4},
+                {'year': 2025, 'month': 7, 'monthly_rate': 1.9, 'annual_rate': 37.0},
+                {'year': 2025, 'month': 8, 'monthly_rate': 1.9, 'annual_rate': 33.6},
+                {'year': 2025, 'month': 9, 'monthly_rate': 2.1, 'annual_rate': 31.8},
+            ]
+            
+            # Only add months after latest_date
+            latest_str = latest_date.strftime('%Y-%m-%d')
+            current_cpi = latest.cpi_index
+            added_count = 0
+            
+            for month_data in very_recent_data:
+                month_date_str = f"{month_data['year']}-{month_data['month']:02d}-01"
+                
+                # Only add if this month is after latest in DB and not in future
+                month_date = datetime.strptime(month_date_str, '%Y-%m-%d').date()
+                if month_date > latest_date and month_date <= current_date:
+                    # Calculate CPI from previous month
+                    current_cpi = current_cpi * (1 + month_data['monthly_rate'] / 100)
+                    
+                    # Check if already exists
+                    existing = db.query(InflationRecord).filter(
+                        InflationRecord.date == month_date
+                    ).first()
+                    
+                    if not existing:
+                        new_record = InflationRecord(
+                            date=month_date,
+                            year=month_data['year'],
+                            month=month_data['month'],
+                            cpi_index=current_cpi,
+                            monthly_rate=month_data['monthly_rate'],
+                            annual_rate=month_data['annual_rate']
+                        )
+                        db.add(new_record)
+                        added_count += 1
+                        print(f"   Added {month_date}: {month_data['monthly_rate']}% monthly")
+            
+            if added_count > 0:
+                db.commit()
+                print(f"   [OK] Added {added_count} hardcoded month(s)!")
+            else:
+                print("   [OK] All months up to date!")
+        else:
+            print("\n[OK] Database is fully up to date!")
+        
+        # Show final status
+        final_latest = db.query(InflationRecord).order_by(InflationRecord.date.desc()).first()
+        print(f"\n[STATUS] Final database status:")
+        print(f"   Total records: {db.query(InflationRecord).count()}")
+        print(f"   Latest month: {final_latest.date}")
+        print(f"   Latest monthly rate: {final_latest.monthly_rate}%")
+        print(f"   Latest annual rate: {final_latest.annual_rate}%")
+        
+        db.close()
             
     except Exception as e:
-        print(f"Startup error: {e}")
+        print(f"[ERROR] Startup error: {e}")
+        import traceback
+        traceback.print_exc()
 
 # CORS middleware
 app.add_middleware(
