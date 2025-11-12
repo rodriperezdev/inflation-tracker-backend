@@ -23,15 +23,16 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://perezrodri.vercel.app",  # Production frontend
+        "https://perezrodri.vercel.app",  # Your production frontend
         "http://localhost:3000",  # Local development
         "http://localhost:3001",  # Alternative local port
     ],
-    allow_origin_regex=r"https://.*\.vercel\.app",  # ✅ ADD THIS LINE
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Allow all Vercel deployments
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
 
 # Response models
 class InflationData(BaseModel):
