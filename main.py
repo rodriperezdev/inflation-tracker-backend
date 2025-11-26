@@ -247,6 +247,10 @@ def read_root():
         "coverage": "1995-present"
     }
 
+@app.head("/")
+def read_root_head():
+    return {}
+
 @app.get("/inflation/data", response_model=List[InflationData])
 async def get_inflation_data(
     start_year: int = Query(1990, ge=1990),
